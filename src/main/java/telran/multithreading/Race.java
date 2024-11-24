@@ -1,30 +1,41 @@
 package telran.multithreading;
 
-public class Race {
-//Fields and methods for Race parameters
-// min_sleep_timeout, max_sleep_time for getting some random sleep value in each iteration as random factor for racer-winner definition
-//distance - number of iterations
-//any others possible fields
-private final int distance;
-    private final int minSleepTimeout;
-    private final int maxSleepTimeout;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
-    public Race(int distance, int minSleepTimeout, int maxSleepTimeout) {
+public class Race {
+    private int distance;
+    private int minSleep;
+    private int maxSleep;
+    private final List<Racer> results = Collections.synchronizedList(new ArrayList<>());
+    AtomicInteger winner = new AtomicInteger(-1);
+    public Race(int distance, int minSleep, int maxSleep) {
         this.distance = distance;
-        this.minSleepTimeout = minSleepTimeout;
-        this.maxSleepTimeout = maxSleepTimeout;
+        this.minSleep = minSleep;
+        this.maxSleep = maxSleep;
+    }
+    public int getWinner() {
+        return winner.get();
     }
 
     public int getDistance() {
         return distance;
     }
-
-    public int getMinSleepTimeout() {
-        return minSleepTimeout;
+    public int getMinSleep() {
+        return minSleep;
+    }
+    public int getMaxSleep() {
+        return maxSleep;
+    }
+    public synchronized void recordResult(Racer racer) {
+        if (!results.contains(racer)) {
+            results.add(racer);
+        }
     }
 
-    public int getMaxSleepTimeout() {
-        return maxSleepTimeout;
+    public synchronized List<Racer> getResults() {
+        return new ArrayList<>(results);
     }
-
 }

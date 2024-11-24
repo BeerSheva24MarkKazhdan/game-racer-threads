@@ -1,46 +1,42 @@
 package telran.multithreading;
 
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Random;
 
 public class Racer extends Thread{
     private Race race;
     private int number;
-    private static AtomicLong globalCounter = new AtomicLong();
-    private static AtomicLong winnerCounter = new AtomicLong(-1);
+    private long startTime;
+    private long finishTime;
+
     public Racer(Race race, int number) {
         this.race = race;
         this.number = number;
     }
     @Override
-    public void run(){
-        //Running cycle containing number of iterations from the Race reference as the distance
-        //Each iteration is printing out the number of the thread for game tracing to see game dynamics
-        for (int i = 0; i < race.getDistance(); i++) {
-            globalCounter.incrementAndGet();
-            System.out.printf("Racer %d is on iteration %d%n", number, i + 1);
-
+    public void run() {
+        startTime = System.currentTimeMillis();
+        int minSleep = race.getMinSleep();
+        int maxSleep = race.getMaxSleep();
+        int distance = race.getDistance();
+        Random random = new Random();
+        for (int i = 0; i < distance; i++) {
             try {
-                Thread.sleep(ThreadLocalRandom.current().nextInt(race.getMinSleepTimeout(), race.getMaxSleepTimeout()));
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+                sleep(random.nextInt(minSleep, maxSleep + 1));
+                System.out.printf("%d - step %d\n",number, i);
+            } catch (InterruptedException e) {}
         }
-
-        if (winnerCounter.compareAndSet(-1, number)) {
-            System.out.printf("Racer %d - Winner!%n", number);
-        }
-
+        race.winner.compareAndSet(-1, number);
+        finishTime = System.currentTimeMillis();
+        race.recordResult(this);
     }
-    public static long getGlobalCounter() {
-        return globalCounter.get();
+    public int getNumber() {
+        return number;
+    }
+    public long getFinishTime() {
+        return finishTime;
     }
 
-    public static long getWinnerCounter() {
-        return winnerCounter.get();
-    }
-    public static void reset() {
-        globalCounter.set(0);
-        winnerCounter.set(-1);
+    public long getRunningTime() {
+        return finishTime - startTime;
     }
 }
